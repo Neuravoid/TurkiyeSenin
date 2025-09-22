@@ -1,0 +1,96 @@
+{
+  "events": [
+    {
+      "id": "event-hamlet-2025-001",
+      "municipality_id": "mun-istanbul-kadikoy",
+      "title": "Hamlet - Shakespeare'in Ölümsüz Eseri",
+      "description": "Shakespeare'in en ünlü tragedyası Hamlet, modern yorumlamalar ve etkileyici performanslarla Kadıköy sahnesinde.",
+      "category_id": "cat-culture",
+      "subcategory_id": "subcat-theater",
+      "start_datetime": "2025-03-15T20:00:00+03:00",
+      "end_datetime": "2025-03-15T22:30:00+03:00",
+      "venue_name": "Kadıköy Belediyesi Atatürk Kültür Merkezi",
+      "venue_address": "Rıhtım Cad. No:14, Kadıköy/İSTANBUL",
+      "venue_latitude": 40.988,
+      "venue_longitude": 29.025,
+      "capacity": 500,
+      "current_registrations": 342,
+      "price": 0,
+      "is_free": true,
+      "registration_required": true,
+      "images": [
+        "/events/hamlet-poster.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "event-jazz-night-2025-002",
+      "municipality_id": "mun-istanbul-kadikoy",
+      "title": "Kadıköy Jazz Gecesi - Önder Focan Trio",
+      "description": "Türk caz müziğinin usta ismi Önder Focan ve grubu, unutulmaz bir gece için Kadıköy'da!",
+      "category_id": "cat-music",
+      "subcategory_id": "subcat-jazz",
+      "start_datetime": "2025-03-20T21:00:00+03:00",
+      "end_datetime": "2025-03-20T23:30:00+03:00",
+      "venue_name": "Kadıköy Sanat Merkezi",
+      "venue_address": "Bahariye Cd. No:32, Kadıköy/İSTANBUL",
+      "venue_latitude": 40.989,
+      "venue_longitude": 29.027,
+      "capacity": 150,
+      "current_registrations": 89,
+      "price": 75,
+      "is_free": false,
+      "registration_required": true,
+      "images": [
+        "/events/jazz-night-poster.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "event-painting-workshop-2025-003",
+      "municipality_id": "mun-ankara-cankaya",
+      "title": "Çocuklar İçin Resim Atölyesi",
+      "description": "7-12 yaş arası çocuklar için eğlenceli ve öğretici resim atölyesi!",
+      "category_id": "cat-family",
+      "subcategory_id": "subcat-children",
+      "start_datetime": "2025-03-18T14:00:00+03:00",
+      "end_datetime": "2025-03-18T16:00:00+03:00",
+      "venue_name": "Çankaya Belediyesi Kültür Merkezi",
+      "venue_address": "Kızılırmak Mah. 1443. Cd. No:25, Çankaya/ANKARA",
+      "venue_latitude": 39.918,
+      "venue_longitude": 32.861,
+      "capacity": 25,
+      "current_registrations": 18,
+      "price": 0,
+      "is_free": true,
+      "registration_required": true,
+      "images": [
+        "/events/painting-workshop-kids.jpg"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "event-marathon-izmir-2025-004",
+      "municipality_id": "mun-izmir-konak",
+      "title": "İzmir Konak Yarı Maratonu",
+      "description": "İzmir'in en güzel güzergahında koşma keyfi! Kordon boyunca yarı maraton.",
+      "category_id": "cat-sport",
+      "subcategory_id": "subcat-running",
+      "start_datetime": "2025-04-06T08:00:00+03:00",
+      "end_datetime": "2025-04-06T12:00:00+03:00",
+      "venue_name": "Konak Pier - Alsancak Kordon",
+      "venue_address": "Konak Pier, Akdeniz Cd. No:1, Konak/İZMİR",
+      "venue_latitude": 38.4189,
+      "venue_longitude": 27.1287,
+      "capacity": 2000,
+      "current_registrations": 1247,
+      "price": 50,
+      "is_free": false,
+      "registration_required": true,
+      "images": [
+        "/events/izmir-marathon-poster.jpg"
+      ],
+      "status": "active"
+    }
+  ]
+}

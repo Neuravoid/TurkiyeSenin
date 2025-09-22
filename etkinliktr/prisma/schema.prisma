@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  firstName      String
+  lastName       String
+  role           String   @default("USER")
+  city           String?
+  district       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  registrations  Registration[]
+}
+
+model Municipality {
+  id        String  @id @default(cuid())
+  name      String
+  city      String
+  district  String?
+  createdAt DateTime @default(now())
+  events    Event[]
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  name      String
+  slug      String  @unique
+  createdAt DateTime @default(now())
+  events    Event[]
+}
+
+model Event {
+  id                     String  @id @default(cuid())
+  municipalityId         String
+  municipality           Municipality @relation(fields: [municipalityId], references: [id])
+  title                  String
+  description            String
+  categoryId             String
+  category               Category @relation(fields: [categoryId], references: [id])
+  startDatetime          DateTime
+  endDatetime            DateTime
+  venueName              String
+  venueAddress           String?
+  venueLatitude          Float?
+  venueLongitude         Float?
+  capacity               Int
+  currentRegistrations   Int      @default(0)
+  price                  Decimal  @default(0)
+  isFree                 Boolean  @default(true)
+  registrationRequired   Boolean  @default(true)
+  status                 String   @default("active")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  registrations          Registration[]
+}
+
+model Registration {
+  id            String   @id @default(cuid())
+  eventId       String
+  event         Event    @relation(fields: [eventId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  status        String   @default("registered")
+  qrCode        String   @unique
+  createdAt     DateTime @default(now())
+}
