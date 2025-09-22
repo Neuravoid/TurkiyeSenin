@@ -14,6 +14,8 @@ export type EventItem = {
   venue_address?: string;
   venue_latitude?: number;
   venue_longitude?: number;
+  city?: string;
+  district?: string;
   capacity: number;
   current_registrations: number;
   price: number;
@@ -39,6 +41,8 @@ export async function getEvents(): Promise<EventItem[]> {
       venue_address: e.venueAddress ?? undefined,
       venue_latitude: e.venueLatitude ?? undefined,
       venue_longitude: e.venueLongitude ?? undefined,
+  city: (e as any).city ?? undefined,
+  district: (e as any).district ?? undefined,
       capacity: e.capacity,
       current_registrations: e.currentRegistrations,
       price: Number(e.price),
@@ -51,9 +55,25 @@ export async function getEvents(): Promise<EventItem[]> {
   }
 }
 
-export async function getEvent(id: string): Promise<EventItem | undefined> {
+export async function getEvent(id: string) {
   try {
-    const e = await prisma.event.findUnique({ where: { id } });
+    const e = await prisma.event.findUnique({ 
+      where: { id },
+      include: {
+        municipality: {
+          select: {
+            name: true,
+            city: true
+          }
+        },
+        category: {
+          select: {
+            name: true,
+            slug: true
+          }
+        }
+      }
+    });
     if (!e) return undefined;
     return {
       id: e.id,
@@ -68,13 +88,16 @@ export async function getEvent(id: string): Promise<EventItem | undefined> {
       venue_latitude: e.venueLatitude ?? undefined,
       venue_longitude: e.venueLongitude ?? undefined,
       capacity: e.capacity,
-      current_registrations: e.currentRegistrations,
+      currentRegistrations: e.currentRegistrations,
       price: Number(e.price),
       is_free: e.isFree,
       registration_required: e.registrationRequired,
-      status: e.status as any
+      status: e.status as any,
+      municipality: e.municipality,
+      category: e.category
     };
-  } catch {
-    return (demo.events as EventItem[]).find(e => e.id === id);
+  } catch (error) {
+    console.error('Error fetching event:', error);
+    return undefined;
   }
 }

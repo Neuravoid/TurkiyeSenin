@@ -1,50 +1,107 @@
-import Link from 'next/link';
-import { getEvents } from '@/lib/data';
+"use client";
 
-export default async function EventsPage({ searchParams }: { searchParams?: { q?: string; city?: string } }) {
-  const all = await getEvents();
-  const q = (searchParams?.q || '').toLowerCase();
-  const city = (searchParams?.city || '').toLowerCase();
+import { useEffect, useMemo, useState } from "react";
+import { getEvents, type EventItem } from "@/lib/data";
+import TurkeyMap from "@/app/_components/ui/TurkeyMap";
+import EventCard from "@/app/_components/ui/EventCard";
 
-  const events = all.filter(e => {
-    const inText = !q || e.title.toLowerCase().includes(q) || e.description.toLowerCase().includes(q);
-    const inCity = !city || (e.venue_address || '').toLowerCase().includes(city);
-    return inText && inCity;
-  });
+// Not: getEvents server tarafa bağlı; bu sayfayı client'a çevirdiğimiz için
+// veriyi bir kez mount sonrasında fetch API ile alacağız (api/events).
+
+export default function EventsPage() {
+  const [all, setAll] = useState<EventItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/events");
+        const data = await res.json();
+        if (mounted) setAll(data.events as EventItem[]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    const normalize = (s: string) => {
+      const map: Record<string, string> = { Ç: 'c', ç: 'c', Ğ: 'g', ğ: 'g', İ: 'i', I: 'i', ı: 'i', Ö: 'o', ö: 'o', Ş: 's', ş: 's', Ü: 'u', ü: 'u' };
+      let r = (s || '').toLowerCase();
+      for (const [k, v] of Object.entries(map)) r = r.replace(new RegExp(k, 'g'), v);
+      return r;
+    };
+    const sel = normalize(selectedCity || '');
+    return all.filter((e) => {
+      const inText = !query || e.title.toLowerCase().includes(query) || e.description.toLowerCase().includes(query);
+      const citySource = e.city || '';
+      const fallbackAddr = e.venue_address || '';
+      const inCity = !selectedCity || normalize(citySource).includes(sel) || (!citySource && normalize(fallbackAddr).includes(sel));
+      return inText && inCity;
+    });
+  }, [all, q, selectedCity]);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-slate-900">Etkinlikler</h1>
-      <form method="get" className="flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-0">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Etkinlik Ara</label>
-          <input className="w-full rounded-lg border border-slate-300 px-3 py-2" type="text" name="q" placeholder="Etkinlik ara..." defaultValue={searchParams?.q || ''} />
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-slate-900">Etkinlikleri Haritada Keşfet</h1>
+        <div className="flex items-center gap-2">
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Etkinlik ara..."
+            className="w-56 rounded-lg border border-slate-300 px-3 py-2"
+          />
+          <button
+            onClick={() => {
+              setQ("");
+              setSelectedCity(null);
+            }}
+            className="inline-flex items-center rounded-lg bg-slate-600 hover:bg-slate-700 text-white px-4 py-2"
+          >
+            Filtreyi Temizle
+          </button>
         </div>
-        <div className="flex-1 min-w-0">
-          <label className="block text-sm font-medium text-slate-700 mb-1">Şehir/İlçe</label>
-          <input className="w-full rounded-lg border border-slate-300 px-3 py-2" type="text" name="city" placeholder="Şehir/İlçe" defaultValue={searchParams?.city || ''} />
-        </div>
-        <button className="inline-flex items-center rounded-lg bg-sky-600 hover:bg-sky-700 text-white px-4 py-2" type="submit">Filtrele</button>
-        <a className="inline-flex items-center rounded-lg bg-slate-600 hover:bg-slate-700 text-white px-4 py-2" href="/events">Temizle</a>
-      </form>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {events.map(e => (
-          <Link key={e.id} href={`/events/${e.id}`} className="block bg-white border border-slate-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-            <div className="p-4 space-y-3">
-              <div className="text-sm text-slate-500">{new Date(e.start_datetime).toLocaleString('tr-TR')}</div>
-              <h3 className="text-lg font-semibold text-slate-900 line-clamp-2">{e.title}</h3>
-              <div className="text-sm text-slate-600">📍 {e.venue_name}</div>
-              <div className="text-sm text-slate-700 flex items-center gap-4">
-                <span>💰 {e.is_free ? 'Ücretsiz' : `${e.price}₺`}</span>
-                <span>👥 {e.current_registrations}/{e.capacity}</span>
-              </div>
-            </div>
-          </Link>
-        ))}
       </div>
-      {events.length === 0 && (
-        <div className="text-slate-500 text-center py-8">Sonuç bulunamadı. Filtreleri gevşetmeyi deneyin.</div>
-      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* Sol: Harita */}
+        <div className="lg:col-span-3">
+          <TurkeyMap selectedCity={selectedCity} onCitySelect={setSelectedCity} />
+        </div>
+
+        {/* Sağ: Liste */}
+        <div className="lg:col-span-2">
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm">
+            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+              <div className="text-slate-700 text-sm">
+                {selectedCity ? (
+                  <>
+                    <span className="font-medium">{selectedCity}</span> için etkinlikler
+                  </>
+                ) : (
+                  <>Tüm etkinlikler</>
+                )}
+              </div>
+              <div className="text-xs text-slate-500">{filtered.length} sonuç</div>
+            </div>
+            <div className="p-4 grid grid-cols-1 gap-4">
+              {loading && <div className="text-slate-500">Yükleniyor...</div>}
+              {!loading && filtered.length === 0 && (
+                <div className="text-slate-500">Sonuç bulunamadı.</div>
+              )}
+              {!loading && filtered.map((e) => <EventCard key={e.id} e={e} />)}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

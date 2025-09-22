@@ -1,4 +1,4 @@
-# EtkinlikTR (MVP)
+# Türkiye Senin (MVP)
 
 Türkiye Belediye Etkinlik Platformu için Next.js tabanlı çalışır bir MVP.
 
@@ -13,7 +13,7 @@ Türkiye Belediye Etkinlik Platformu için Next.js tabanlı çalışır bir MVP.
 2) Bağımlılıkları yükleyin ve geliştirme sunucusunu başlatın:
 
 ```powershell
-cd etkinliktr
+cd Türkiye Senin
 npm install
 npm run dev
 ```

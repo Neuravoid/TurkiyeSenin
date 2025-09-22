@@ -1,7 +1,8 @@
-import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import QRCode from 'react-qr-code';
+import { cookies } from 'next/headers';
 
 export default async function TicketsPage() {
   const token = cookies().get('token')?.value;
@@ -44,7 +45,9 @@ export default async function TicketsPage() {
                 {r.status}
               </span>
             </div>
-            <div className="text-xs text-slate-500 font-mono">QR: {r.qrCode}</div>
+            <div className="mt-2">
+              <QRCode value={r.qrCode} size={100} />
+            </div>
             <Link href={`/events/${r.eventId}`} className="inline-flex items-center text-sky-600 hover:text-sky-700 text-sm">
               Etkinlik Sayfası →
             </Link>

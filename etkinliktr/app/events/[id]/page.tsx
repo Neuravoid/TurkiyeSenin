@@ -1,16 +1,109 @@
-import { getEvent } from '@/lib/data';
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import QRCode from 'react-qr-code';
-import { cookies } from 'next/headers';
-import { verifyToken } from '@/lib/auth';
 
-export default async function EventDetail({ params, searchParams }: { params: { id: string }, searchParams?: { registered?: string } }) {
-  const event = await getEvent(params.id);
+type Event = {
+  id: string;
+  title: string;
+  description: string;
+  start_datetime: string;
+  venue_name: string;
+  venue_address: string;
+  price: number;
+  capacity: number;
+  currentRegistrations: number;
+  municipality: {
+    name: string;
+    city: string;
+  };
+  category: {
+    name: string;
+    slug: string;
+  };
+};
+
+type Registration = {
+  id: string;
+  hasGeneratedQr: boolean;
+};
+
+export default function EventDetail({ params, searchParams }: { params: { id: string }, searchParams?: { registered?: string } }) {
+  const [event, setEvent] = useState<Event | null>(null);
+  const [registration, setRegistration] = useState<Registration | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [qrUpdated, setQrUpdated] = useState(false);
+
+  useEffect(() => {
+    fetchEventData();
+  }, [params.id]);
+
+  useEffect(() => {
+    // QR kod gösterildiğinde flag'i güncelle
+    if (registration && !registration.hasGeneratedQr && !qrUpdated && shouldShowQR()) {
+      updateQrFlag();
+    }
+  }, [registration, qrUpdated]);
+
+  const fetchEventData = async () => {
+    try {
+      const [eventRes, regRes] = await Promise.all([
+        fetch(`/api/events/${params.id}`),
+        fetch(`/api/registrations?eventId=${params.id}`)
+      ]);
+
+      if (eventRes.ok) {
+        const eventData = await eventRes.json();
+        setEvent(eventData.event);
+      }
+
+      if (regRes.ok) {
+        const regData = await regRes.json();
+        if (regData.registrations && regData.registrations.length > 0) {
+          setRegistration(regData.registrations[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateQrFlag = async () => {
+    if (!registration) return;
+
+    try {
+      const response = await fetch(`/api/registrations/${registration.id}/qr`, {
+        method: 'PATCH',
+      });
+
+      if (response.ok) {
+        setRegistration(prev => prev ? { ...prev, hasGeneratedQr: true } : null);
+        setQrUpdated(true);
+      }
+    } catch (error) {
+      console.error('Error updating QR flag:', error);
+    }
+  };
+
+  const shouldShowQR = () => {
+    return searchParams?.registered === '1' || registration?.hasGeneratedQr;
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
+        <p className="mt-2 text-gray-600">Yükleniyor...</p>
+      </div>
+    );
+  }
+
   if (!event) {
     return <div className="text-center py-8">Etkinlik bulunamadı.</div>;
   }
-  const token = cookies().get('token')?.value;
-  const user = token ? verifyToken(token) : null;
 
   return (
     <div className="space-y-6">
@@ -23,6 +116,11 @@ export default async function EventDetail({ params, searchParams }: { params: { 
           ✅ Kayıt başarılı! QR kodunuz hazır.
         </div>
       )}
+      {registration && !searchParams?.registered && (
+        <div className="rounded-xl border border-blue-300 bg-blue-50 text-blue-700 px-4 py-3">
+          🎫 Bu etkinliğe zaten kayıtlısınız. QR kodunuz aşağıda görüntüleniyor.
+        </div>
+      )}
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <div className="text-slate-600">{new Date(event.start_datetime).toLocaleString('tr-TR')}</div>
@@ -32,28 +130,26 @@ export default async function EventDetail({ params, searchParams }: { params: { 
         <div className="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
           <h3 className="text-lg font-semibold text-slate-900">Kayıt Bilgileri</h3>
           <div className="space-y-2 text-sm">
-            <div>Durum: <span className="font-medium">{event.current_registrations}/{event.capacity}</span></div>
-            <div>Ücret: <span className="font-medium">{event.is_free ? 'Ücretsiz' : `${event.price}₺`}</span></div>
+            <div>Durum: <span className="font-medium">{event.currentRegistrations}/{event.capacity}</span></div>
+            <div>Ücret: <span className="font-medium">{event.price === 0 ? 'Ücretsiz' : `${event.price}₺`}</span></div>
           </div>
-          {event.current_registrations >= event.capacity ? (
+          {event.currentRegistrations >= event.capacity ? (
             <div className="text-red-600 font-medium">Kapasite dolu</div>
-          ) : user ? (
+          ) : registration ? (
+            <div className="text-green-600 font-medium">✅ Zaten kayıtlısınız</div>
+          ) : (
             <form action={`/api/registrations`} method="post">
               <input type="hidden" name="event_id" value={event.id} />
               <button className="w-full inline-flex items-center justify-center rounded-lg bg-sky-600 hover:bg-sky-700 text-white px-4 py-2" type="submit">
                 🎫 Ücretsiz Kayıt Ol
               </button>
             </form>
-          ) : (
-            <p className="text-sm text-slate-600">
-              Kayıt için <Link href={{ pathname: '/auth/login', query: { redirect: `/events/${event.id}` } }} className="text-sky-600 hover:text-sky-700">giriş yap</Link>.
-            </p>
           )}
-          {searchParams?.registered === '1' && (
+          {shouldShowQR() && registration && (
             <div className="space-y-3">
               <div className="text-sm text-slate-600">Biletiniz için QR kod:</div>
               <div className="bg-white p-3 border border-slate-200 rounded-lg inline-block">
-                <QRCode value={`event:${event.id}`} size={160} />
+                <QRCode value={`event:${event.id}:user:${registration.id}`} size={160} />
               </div>
             </div>
           )}

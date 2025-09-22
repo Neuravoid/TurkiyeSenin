@@ -9,6 +9,7 @@ export default function UserNav() {
     <nav className="flex items-center gap-3 text-sm">
       <Link href="/" className="text-slate-700 hover:text-slate-900">Ana Sayfa</Link>
       <Link href="/events" className="text-slate-700 hover:text-slate-900">Etkinlikler</Link>
+      <Link href="/scholarships" className="text-slate-700 hover:text-slate-900">Burslar</Link>
       {user ? (
         <>
           <Link href="/tickets" className="text-slate-700 hover:text-slate-900">Biletlerim</Link>

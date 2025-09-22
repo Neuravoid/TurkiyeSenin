@@ -1,5 +1,5 @@
 {
-  "name": "etkinliktr",
+  "name": "Türkiye Senin",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -16,14 +16,17 @@
   "dependencies": {
     "@prisma/client": "5.20.0",
     "bcryptjs": "2.4.3",
+    "d3-geo": "^3.1.1",
     "jsonwebtoken": "9.0.2",
     "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-qr-code": "2.0.13",
+    "react-simple-maps": "^3.0.0",
+    "topojson-client": "^3.1.0",
     "typescript": "5.4.5",
     "uuid": "9.0.1",
-    "zod": "3.23.8"
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/bcryptjs": "2.4.6",

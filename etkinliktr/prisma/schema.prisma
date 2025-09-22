@@ -19,6 +19,7 @@ model User {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   registrations  Registration[]
+  favoriteScholarships FavoriteScholarship[]
 }
 
 model Municipality {
@@ -28,6 +29,7 @@ model Municipality {
   district  String?
   createdAt DateTime @default(now())
   events    Event[]
+  scholarships Scholarship[]
 }
 
 model Category {
@@ -52,6 +54,9 @@ model Event {
   venueAddress           String?
   venueLatitude          Float?
   venueLongitude         Float?
+  // Denormalized location for quick filtering
+  city                   String?
+  district               String?
   capacity               Int
   currentRegistrations   Int      @default(0)
   price                  Decimal  @default(0)
@@ -61,15 +66,50 @@ model Event {
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
   registrations          Registration[]
+  scholarships           Scholarship[]
 }
 
 model Registration {
-  id            String   @id @default(cuid())
-  eventId       String
-  event         Event    @relation(fields: [eventId], references: [id])
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
-  status        String   @default("registered")
-  qrCode        String   @unique
-  createdAt     DateTime @default(now())
+  id               String   @id @default(cuid())
+  eventId          String
+  event            Event    @relation(fields: [eventId], references: [id])
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  status           String   @default("registered")
+  qrCode           String   @unique
+  hasGeneratedQr   Boolean  @default(false)
+  createdAt        DateTime @default(now())
+}
+
+model Scholarship {
+  id                  String   @id @default(cuid())
+  municipalityId      String
+  municipality        Municipality @relation(fields: [municipalityId], references: [id])
+  title               String
+  description         String?
+  eligibilityCriteria String?
+  applicationStart    DateTime?
+  applicationEnd      DateTime?
+  quota               Int?
+  link                String?
+  educationLevel      String?
+  status              String   @default("active")
+  eventId             String?
+  event               Event?   @relation(fields: [eventId], references: [id])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  favorites           FavoriteScholarship[]
+}
+
+model FavoriteScholarship {
+  id             String   @id @default(cuid())
+  userId         String
+  scholarshipId  String
+  reminderAt     DateTime?
+  createdAt      DateTime @default(now())
+
+  user           User        @relation(fields: [userId], references: [id])
+  scholarship    Scholarship @relation(fields: [scholarshipId], references: [id])
+
+  @@unique([userId, scholarshipId])
 }

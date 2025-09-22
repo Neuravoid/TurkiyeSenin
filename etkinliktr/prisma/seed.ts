@@ -21,6 +21,21 @@ async function main() {
     await prisma.category.upsert({ where: { slug: c.slug }, update: {}, create: c });
   }
 
+  // Sample municipalities for quick start
+  const sampleMunicipalities = [
+    { name: 'Kadıköy', city: 'İstanbul', district: 'Kadıköy' },
+    { name: 'Üsküdar', city: 'İstanbul', district: 'Üsküdar' },
+    { name: 'Yenimahalle', city: 'Ankara', district: 'Yenimahalle' },
+    { name: 'Konak', city: 'İzmir', district: 'Konak' },
+  ];
+  for (const m of sampleMunicipalities) {
+    // No unique on municipality, so try findFirst then create
+    const exists = await prisma.municipality.findFirst({ where: { name: m.name, city: m.city } });
+    if (!exists) {
+      await prisma.municipality.create({ data: m });
+    }
+  }
+
   // Municipalities from demo
   const munByKey = new Map<string, string>();
   function muniKey(city: string, name: string) { return `${city.toLowerCase()}-${name.toLowerCase()}`; }
@@ -52,7 +67,7 @@ async function main() {
     const cat = await prisma.category.findFirst({ where: { slug: catSlug } });
     if (!cat) continue;
 
-    const anyMunId = (await prisma.municipality.findFirst())!.id;
+  const anyMunId = (await prisma.municipality.findFirst())!.id;
 
     await prisma.event.upsert({
       where: { id: e.id },
@@ -77,6 +92,40 @@ async function main() {
         status: e.status || 'active'
       }
     });
+  }
+
+  // Sample scholarships
+  const kadikoy = await prisma.municipality.findFirst({ where: { name: 'Kadıköy' } });
+  const uskudar = await prisma.municipality.findFirst({ where: { name: 'Üsküdar' } });
+  if (kadikoy) {
+    await (prisma as any).scholarship.create({
+      data: {
+        municipalityId: kadikoy.id,
+        title: 'Kadıköy Belediyesi Üniversite Öğrencisi Bursu',
+        description: 'İhtiyaç sahibi üniversite öğrencilerine 8 ay boyunca aylık destek.',
+        eligibilityCriteria: 'İstanbul’da ikamet; aktif öğrenci belgesi; gelir beyanı.',
+        applicationStart: new Date(),
+        applicationEnd: new Date(Date.now() + 1000*60*60*24*30),
+        quota: 100,
+        educationLevel: 'Lisans',
+        status: 'active'
+      }
+    }).catch(()=>{});
+  }
+  if (uskudar) {
+    await (prisma as any).scholarship.create({
+      data: {
+        municipalityId: uskudar.id,
+        title: 'Üsküdar Belediyesi Lise Destek Bursu',
+        description: 'İlçedeki lise öğrencilerine eğitim desteği.',
+        eligibilityCriteria: 'Üsküdar’da ikamet; not ortalaması; ihtiyaç durumu.',
+        applicationStart: new Date(Date.now() - 1000*60*60*24*7),
+        applicationEnd: new Date(Date.now() + 1000*60*60*24*21),
+        quota: 200,
+        educationLevel: 'Lise',
+        status: 'active'
+      }
+    }).catch(()=>{});
   }
 }
 
